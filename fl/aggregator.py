@@ -3,18 +3,25 @@ from flwr.server.strategy import FedXgbBagging
 from flwr.common import Metrics
 from typing import List, Tuple
 
-# Metric Aggregation Function
 def weighted_average(metrics: List[Tuple[int, Metrics]]) -> Metrics:
     """
     Aggregation function for (num_examples, metrics) tuples.
-    Calculates weighted average of 'accuracy'.
+    Calculates weighted average of 'accuracy' AND 'loss'.
     """
-    # Multiply accuracy of each client by number of examples used
+    aggregated_metrics = {}
+
+    # 1. Aggregate Accuracy
     accuracies = [num_examples * m["accuracy"] for num_examples, m in metrics]
     examples = [num_examples for num_examples, _ in metrics]
+    aggregated_metrics["accuracy"] = sum(accuracies) / sum(examples)
 
-    # Aggregate and divide by total examples
-    return {"accuracy": sum(accuracies) / sum(examples)}
+    # 2. Aggregate Loss (if present in metrics)
+    # This solves the "Loss: 0" issue by making it an explicit metric
+    if "loss" in metrics[0][1]:
+        losses = [num_examples * m["loss"] for num_examples, m in metrics]
+        aggregated_metrics["loss"] = sum(losses) / sum(examples)
+
+    return aggregated_metrics
 
 def get_strategy():
     """

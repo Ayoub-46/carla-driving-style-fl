@@ -80,20 +80,25 @@ class DrivingXgbClient(fl.client.Client):
         dtest = xgb.DMatrix(self.X_test, label=self.y_test)
         preds = self.model.bst.predict(dtest)
         
-        # 1. Calculate Accuracy
-        # If your model outputs probabilities (multi:softprob), use np.argmax(preds, axis=1)
-        # If your model outputs labels (multi:softmax), use preds directly
-        acc = accuracy_score(self.y_test, preds)
+        # --- FIX: Handle both Probability (2D) and Label (1D) outputs ---
+        # If preds is 2D (probabilities), convert to labels using argmax
+        if len(preds.shape) > 1 and preds.shape[1] > 1:
+            preds_labels = np.argmax(preds, axis=1)
+        else:
+            preds_labels = preds
+        # ---------------------------------------------------------------
 
-        # 2. Calculate Loss (Error Rate)
-        # Flower server aggregates this value automatically!
+        # 1. Calculate Accuracy
+        acc = accuracy_score(self.y_test, preds_labels)
+
+        # 2. Calculate Loss
         loss_value = 1.0 - acc
 
         return EvaluateRes(
             status=Status(code=Code.OK, message="OK"),
             loss=float(loss_value),  
             num_examples=len(self.X_test),
-            metrics={"accuracy": float(acc)},
+            metrics={"accuracy": float(acc), "loss": float(loss_value)}
         )
 
 import argparse
