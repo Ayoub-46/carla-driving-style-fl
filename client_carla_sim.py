@@ -33,7 +33,7 @@ from agents.navigation.behavior_agent import BehaviorAgent
 # --- CONFIGURATION ---
 SERVER_ADDRESS = "127.0.0.1:8080"
 BATCH_SIZE = 1000
-BEHAVIOR = 'normal'
+BEHAVIOR = 'aggressive'
 LABEL_MAP = {'cautious': 0, 'normal': 1, 'aggressive': 2}
 SPEED_LIMIT = 50.0
 DATA_PATH = "data/dataset.csv" 
